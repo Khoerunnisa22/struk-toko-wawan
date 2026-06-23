@@ -873,7 +873,7 @@ function renderPreview(){
     `}
     <div class="r-total"><span>TOTAL BAYAR</span><span>Rp${rupiah(receipt.totalBayar)}</span></div>
     <div class="r-footer">${escapeHtml(shop.footer)}</div>
-    ${!isPra ? `<div class="r-footer"><br>Bukti transaksi ini dinyatakan sah oleh PLN.</div>` : ''}
+    
   `;
 }
 function rRow(label, value){
@@ -974,7 +974,6 @@ function buildEscPos(){
   wrapCenter(shop.footer || '').forEach(l=>{ pushText(l); NL(); });
   if(receipt.jenis!=='prabayar'){
     wrapCenter('').forEach(l=>{ pushText(l); NL(); });
-    wrapCenter('Bukti transaksi ini dinyatakan sah oleh PLN.').forEach(l=>{ pushText(l); NL(); });
   }
   NL(); NL(); NL();
   return new Uint8Array(bytes);
