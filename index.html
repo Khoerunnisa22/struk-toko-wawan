@@ -279,7 +279,7 @@
         </div>
         <img id="previewImg" style="display:none;">
       </label>
-      <button class="btn btn-ai" id="btnAiRead" disabled>📷 Baca Otomatis (OCR)</button>
+      <button class="btn btn-ai" id="btnAiRead" disabled>🤖 Baca Otomatis dengan AI</button>
       <div class="status-line" id="aiStatus"></div>
     </div>
   </div>
@@ -513,130 +513,61 @@ btnAiRead.addEventListener('click', async ()=>{
   if(!uploadedImage) return;
   btnAiRead.disabled = true;
   btnAiRead.textContent = '⏳ Membaca struk...';
-  setStatus(aiStatus, 'info', 'OCR sedang membaca foto struk, tunggu sebentar...');
+  setStatus(aiStatus, 'info', 'AI sedang membaca foto struk, tunggu sebentar...');
   try{
-    const data = await extractWithOCR(uploadedImage);
+    const data = await extractWithAI(uploadedImage);
     fillFormFromAi(data);
     setStatus(aiStatus, 'ok', 'Berhasil dibaca. Cek lagi semua kolom sebelum cetak, terutama total bayar.');
   }catch(err){
     console.error(err);
-    setStatus(aiStatus, 'err', 'Gagal baca otomatis. Coba foto struk lebih jelas/terang, atau isi manual ya.');
+    setStatus(aiStatus, 'err', 'Gagal baca otomatis. Pastikan ada koneksi internet lalu coba lagi. Atau isi kolom di bawah secara manual ya.');
   }finally{
     btnAiRead.disabled = false;
-    btnAiRead.textContent = '📷 Baca Otomatis (OCR)';
+    btnAiRead.textContent = '🤖 Baca Otomatis dengan AI';
   }
 });
 
-async function extractWithOCR(image){
-  // Load Tesseract dari CDN kalau belum ada
-  if(!window.Tesseract){
-    await new Promise((res,rej)=>{
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-      s.onload = res; s.onerror = rej;
-      document.head.appendChild(s);
-    });
-  }
+async function extractWithAI(image){
+  const GEMINI_KEY = 'AQ.Ab8RN6JoaMxN4W_1KAtE6Am530JYSj2IjI-Wq26edeTmFyjyxg';
+  const prompt = `Kamu adalah asisten OCR untuk struk pembelian token listrik PLN prabayar atau struk tagihan listrik pascabayar dari Indonesia (bisa dari aplikasi ShopeePay, PPOB, toko pulsa, dll).
+Balas HANYA dengan JSON murni (tanpa markdown, tanpa penjelasan), dengan struktur tepat seperti ini:
+{"jenis":"prabayar atau pascabayar","tanggal":"","waktu":"","nama":"","nomorMeter":"","idPelanggan":"","tarifDaya":"","jumlahKwh":"","kodeToken":"","noReferensi":"","totalBayar":0,"periode":""}
 
-  // Jalankan OCR
-  const imgData = 'data:image/jpeg;base64,' + image.base64;
-  const result = await Tesseract.recognize(imgData, 'ind+eng', {
-    logger: m => { if(m.status==='recognizing text') setStatus(aiStatus,'info','OCR: '+Math.round(m.progress*100)+'%...'); }
+Aturan field:
+- jenis: "prabayar" jika ada token/kode, "pascabayar" jika ada periode tagihan (BL/TH)
+- tanggal: format asli di struk (misal "2026-06-20" atau "20 JUN 2026")
+- waktu: jam transaksi jika ada (misal "12:01:44")
+- nama: nama pelanggan
+- idPelanggan: nomor ID pelanggan / IDPEL
+- nomorMeter: untuk prabayar = nomor meter, untuk pascabayar = nilai STAND METER (misal "00010049-00010208")
+- tarifDaya: tarif dan daya (misal "R1 / 450 VA")
+- jumlahKwh: hanya untuk prabayar
+- kodeToken: hanya untuk prabayar (20 digit angka)
+- noReferensi: nomor referensi / NO REF
+- totalBayar: WAJIB isi dengan nilai TOTAL BAYAR paling akhir di struk (angka murni tanpa Rp atau titik). Untuk ShopeePay ambil baris "TOTAL BAYAR". Jangan ambil RP TAG PLN atau nilai lain yang bukan total akhir.
+- periode: hanya untuk pascabayar (misal "JUN26" atau "Juni 2026")
+
+Jika field tidak terlihat, isi "" atau 0 untuk angka.`;
+
+  const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      contents:[{
+        parts:[
+          { inline_data:{ mime_type: image.mediaType, data: image.base64 } },
+          { text: prompt }
+        ]
+      }]
+    })
   });
-  const raw = result.data.text;
-  console.log('OCR raw:', raw);
-  return parseStrukText(raw);
+  if(!resp.ok) throw new Error('Gemini API error '+resp.status);
+  const json = await resp.json();
+  const text = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  if(!text) throw new Error('no text in Gemini response');
+  let cleaned = text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+  return JSON.parse(cleaned);
 }
-
-function parseStrukText(text){
-  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
-  const d = {
-    jenis:'', tanggal:'', waktu:'', nama:'', nomorMeter:'',
-    idPelanggan:'', tarifDaya:'', jumlahKwh:'', kodeToken:'',
-    noReferensi:'', totalBayar:0, periode:''
-  };
-
-  // Helper: cari nilai di baris yang mengandung keyword
-  function find(keywords, fallbackNext=false){
-    for(let i=0;i<lines.length;i++){
-      const l = lines[i].toUpperCase();
-      if(keywords.some(k=>l.includes(k))){
-        // Coba ambil nilai setelah tanda : atau tab
-        const m = lines[i].match(/[:	]\s*(.+)$/);
-        if(m) return m[1].trim();
-        // Atau cari angka/teks di bagian kanan baris
-        const parts = lines[i].split(/\s{2,}/);
-        if(parts.length>1) return parts[parts.length-1].trim();
-        // Atau ambil baris berikutnya
-        if(fallbackNext && lines[i+1]) return lines[i+1].trim();
-      }
-    }
-    return '';
-  }
-
-  // Deteksi jenis
-  const allText = text.toUpperCase();
-  if(allText.includes('TOKEN') || allText.includes('KWH') || allText.match(/\d{4}[- ]\d{4}[- ]\d{4}[- ]\d{4}[- ]\d{4}/)){
-    d.jenis = 'prabayar';
-  } else if(allText.includes('TAGIHAN') || allText.includes('BL/TH') || allText.includes('STAND METER') || allText.includes('PASCABAYAR')){
-    d.jenis = 'pascabayar';
-  }
-
-  // Tanggal & waktu
-  const tglMatch = text.match(/(\d{4}-\d{2}-\d{2})/);
-  if(tglMatch) d.tanggal = tglMatch[1];
-  else {
-    const tgl2 = text.match(/(\d{1,2}[\s\-\/][A-Z]{3}[\s\-\/]\d{4})/i);
-    if(tgl2) d.tanggal = tgl2[1];
-  }
-  const waktuMatch = text.match(/(\d{2}:\d{2}:\d{2})/);
-  if(waktuMatch) d.waktu = waktuMatch[1];
-
-  // Data pelanggan
-  d.nama        = find(['NAMA']);
-  d.idPelanggan = find(['IDPEL','ID PEL','ID PELANGGAN','NO PELANGGAN']);
-  d.tarifDaya   = find(['TARIF','DAYA']);
-  d.noReferensi = find(['NO REF','NOREF','REFERENSI']);
-
-  // Stand meter / nomor meter
-  const standMatch = text.match(/STAND\s*METER[^\d]*(\d{5,}[-–]\d{5,})/i);
-  if(standMatch) d.nomorMeter = standMatch[1];
-  else d.nomorMeter = find(['STAND METER','NO METER','NOMOR METER','METER']);
-
-  // Periode (pascabayar)
-  const periodeMatch = text.match(/BL\/TH\s*[:\s]+([A-Z]{3}\d{2})/i) || text.match(/PERIODE[:\s]+(.+)/i);
-  if(periodeMatch) d.periode = periodeMatch[1].trim();
-
-  // KWH & token (prabayar)
-  d.jumlahKwh = find(['JML KWH','JUMLAH KWH','KWH']);
-  // Token: cari pola 20 digit
-  const tokenMatch = text.replace(/\s/g,'').match(/\d{20}/);
-  if(tokenMatch) d.kodeToken = tokenMatch[0].replace(/(.{4})/g,'$1-').slice(0,-1);
-
-  // Total bayar — ambil angka terbesar dari baris TOTAL BAYAR
-  for(let i=0;i<lines.length;i++){
-    const l = lines[i].toUpperCase();
-    if(l.includes('TOTAL BAYAR') || l.includes('TOTALBAYAR')){
-      const angka = lines[i].match(/[\d\.]+/g);
-      if(angka){
-        const val = parseInt(angka[angka.length-1].replace(/\./g,''));
-        if(val > d.totalBayar) d.totalBayar = val;
-      }
-    }
-  }
-  // Fallback: ambil angka terbesar di seluruh struk kalau totalBayar masih 0
-  if(!d.totalBayar){
-    let max = 0;
-    lines.forEach(l=>{
-      const m = l.match(/Rp[\s]?([\d\.]+)/i);
-      if(m){ const v = parseInt(m[1].replace(/\./g,'')); if(v>max) max=v; }
-    });
-    d.totalBayar = max;
-  }
-
-  return d;
-}
-
 
 function fillFormFromAi(d){
   // Set jenis dulu agar field yang tepat muncul
