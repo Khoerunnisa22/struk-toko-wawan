@@ -740,8 +740,8 @@ function autoHitungRincianPascabayar(){
   const tarifDaya = document.getElementById('fTarif').value;
   const denda = hitungDenda(tanggal, tarifDaya);
 
-  // Total Tagihan PLN = ShopeePay (langsung)
-  const totalTagihan = shopeePay;
+  // Total Tagihan PLN = ShopeePay - denda
+  const totalTagihan = shopeePay - denda;
 
   document.getElementById('fTagihan').value = totalTagihan > 0 ? totalTagihan : '';
   document.getElementById('fDenda').value   = denda > 0 ? denda : '';
