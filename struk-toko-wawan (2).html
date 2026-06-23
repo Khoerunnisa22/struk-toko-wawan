@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+<title>Struk Toko Wawan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c2333;
+    --paper:#fdfbf3;
+    --paper-edge:#f3efe1;
+    --accent:#ffb400;
+    --accent-dark:#c97e00;
+    --muted:#6f7585;
+    --border:#e7e3d6;
+    --danger:#c0392b;
+    --success:#1f8a4c;
+    --bg:#eef0e8;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  html,body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .app{
+    max-width:460px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--bg);
+    display:flex;
+    flex-direction:column;
+    padding-bottom:96px;
+  }
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:20;
+    background:var(--ink);
+    color:#fff;
+    padding:14px 16px;
+    display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 2px 10px rgba(0,0,0,.12);
+  }
+  .topbar .brand{display:flex; align-items:center; gap:10px;}
+  .bolt{
+    width:30px;height:30px;border-radius:8px;background:var(--accent);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    font-size:16px;
+  }
+  .topbar h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:16px; font-weight:700; margin:0; letter-spacing:.2px;
+  }
+  .topbar .sub{font-size:11px; color:#b9bdca; margin-top:1px;}
+  .iconbtn{
+    background:rgba(255,255,255,.08); border:none; color:#fff;
+    width:36px;height:36px;border-radius:9px; font-size:16px;
+    display:flex;align-items:center;justify-content:center; cursor:pointer;
+  }
+  .iconbtn:active{background:rgba(255,255,255,.18);}
+
+  /* ---------- generic sections ---------- */
+  .section{padding:16px 16px 0;}
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .card h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:13px; text-transform:uppercase; letter-spacing:.6px;
+    color:var(--muted); margin:0 0 12px; display:flex; align-items:center; gap:6px;
+  }
+  .card h2 .n{
+    background:var(--ink); color:#fff; width:18px;height:18px;border-radius:50%;
+    font-size:10px; display:flex;align-items:center;justify-content:center; font-weight:700;
+  }
+
+  /* ---------- upload area ---------- */
+  .upload-zone{
+    border:2px dashed var(--border);
+    border-radius:14px;
+    padding:18px;
+    text-align:center;
+    cursor:pointer;
+    transition:.15s;
+    background:#fafaf6;
+  }
+  .upload-zone.has-img{padding:10px;}
+  .upload-zone:active{background:#f2f1e8;}
+  .upload-zone .icon{font-size:26px;}
+  .upload-zone p{margin:6px 0 0; font-size:13px; color:var(--muted);}
+  .upload-zone img{max-width:100%; max-height:280px; border-radius:10px; display:block; margin:0 auto;}
+  input[type=file]{display:none;}
+
+  .btn{
+    border:none; border-radius:12px; font-family:'Space Grotesk',sans-serif;
+    font-weight:600; font-size:14px; padding:12px 14px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; transition:transform .08s;
+  }
+  .btn:active{transform:scale(.98);}
+  .btn-ai{
+    background:var(--ink); color:#fff; margin-top:10px;
+  }
+  .btn-ai[disabled]{opacity:.55; cursor:default;}
+  .btn-ghost{
+    background:transparent; color:var(--ink); border:1px solid var(--border);
+  }
+  .btn-sm{padding:9px 12px; font-size:12.5px; width:auto;}
+
+  .status-line{
+    font-size:12.5px; margin-top:8px; display:none; padding:8px 10px;
+    border-radius:9px; line-height:1.4;
+  }
+  .status-line.show{display:block;}
+  .status-line.info{background:#eef2ff; color:#3645b5;}
+  .status-line.err{background:#fdecea; color:var(--danger);}
+  .status-line.ok{background:#eaf7ee; color:var(--success);}
+
+  /* ---------- form ---------- */
+  .field{margin-bottom:11px;}
+  .field label{
+    display:block; font-size:12px; color:var(--muted); margin-bottom:5px; font-weight:500;
+  }
+  .field input, .field select, .field textarea{
+    width:100%; border:1px solid var(--border); border-radius:10px;
+    padding:10px 11px; font-size:14px; font-family:'Inter',sans-serif;
+    background:#fcfcfa; color:var(--ink);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    outline:none; border-color:var(--accent-dark);
+  }
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .toggle-group{display:flex; gap:8px; margin-bottom:12px;}
+  .toggle-group button{
+    flex:1; padding:10px; border-radius:10px; border:1px solid var(--border);
+    background:#fcfcfa; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px;
+    color:var(--muted); cursor:pointer;
+  }
+  .toggle-group button.active{
+    background:var(--ink); color:#fff; border-color:var(--ink);
+  }
+
+  .price-box{
+    background:#fff8e8; border:1px solid #f3deab; border-radius:12px; padding:12px;
+  }
+  .price-box label{color:#8a6300;}
+  .price-input-wrap{display:flex; align-items:center; gap:8px;}
+  .price-input-wrap span{font-weight:700; color:#8a6300;}
+  .price-input-wrap input{font-size:18px; font-weight:700; font-family:'Space Grotesk',sans-serif;}
+  .margin-badge{
+    margin-top:8px; font-size:12px; padding:7px 10px; border-radius:9px;
+    display:flex; justify-content:space-between;
+  }
+  .margin-badge.pos{background:#eaf7ee; color:var(--success);}
+  .margin-badge.neg{background:#fdecea; color:var(--danger);}
+  .margin-badge.zero{background:#f1f1ea; color:var(--muted);}
+
+  /* ---------- receipt preview ---------- */
+  .receipt-wrap{padding:6px 4px 18px;}
+  .receipt{
+    background:var(--paper);
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    line-height:1.55;
+    color:#222;
+    padding:20px 16px 26px;
+    margin:0 auto;
+    max-width:300px;
+    position:relative;
+    box-shadow:0 6px 18px rgba(0,0,0,.12);
+  }
+  .receipt::before, .receipt::after{
+    content:"";
+    position:absolute; left:0; right:0; height:10px;
+    background-image:
+      linear-gradient(135deg, var(--bg) 50%, transparent 50%),
+      linear-gradient(-135deg, var(--bg) 50%, transparent 50%);
+    background-size:14px 14px;
+    background-repeat:repeat-x;
+  }
+  .receipt::before{top:-1px; background-position:top left;}
+  .receipt::after{bottom:-1px; background-position:bottom left; transform:rotate(180deg);}
+  .r-center{text-align:center;}
+  .r-shop{font-weight:700; font-size:16px; letter-spacing:.5px;}
+  .r-addr{font-size:11px; color:#555;}
+  .r-dash{border-top:1px dashed #999; margin:8px 0;}
+  .r-row{display:flex; justify-content:space-between; gap:8px;}
+  .r-row .l{color:#444;}
+  .r-row .v{text-align:right; font-weight:500;}
+  .r-token{
+    font-weight:700; font-size:16px; letter-spacing:1px; text-align:center;
+    margin:4px 0; word-break:break-all;
+  }
+  .r-total{display:flex; justify-content:space-between; font-weight:700; font-size:14px; margin-top:2px;}
+  .r-footer{font-size:10.5px; color:#666; text-align:center; margin-top:8px;}
+
+  /* ---------- history ---------- */
+  .hist-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 4px; border-bottom:1px solid var(--border); font-size:12.5px;
+  }
+  .hist-item:last-child{border-bottom:none;}
+  .hist-item .meta{color:var(--muted); font-size:11px;}
+  .hist-item button{
+    background:var(--ink); color:#fff; border:none; border-radius:8px; padding:6px 10px; font-size:11px; cursor:pointer;
+  }
+  .empty-hint{font-size:12.5px; color:var(--muted); text-align:center; padding:8px 0;}
+
+  /* ---------- sticky action bar ---------- */
+  .actionbar{
+    position:fixed; left:0; right:0; bottom:0; z-index:30;
+    max-width:460px; margin:0 auto;
+    background:#fff; border-top:1px solid var(--border);
+    padding:10px 14px 14px;
+    box-shadow:0 -6px 18px rgba(0,0,0,.08);
+  }
+  .actionbar .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;}
+  .actionbar .btn{font-size:12px; padding:11px 6px; flex-direction:column; gap:3px; line-height:1.2;}
+  .actionbar .btn .ic{font-size:16px;}
+  .btn-bt{background:#2563eb; color:#fff;}
+  .btn-rawbt{background:#16805a; color:#fff;}
+  .btn-print{background:#444c5e; color:#fff;}
+  .actionbar .hint{font-size:10.5px; color:var(--muted); text-align:center; margin-top:7px; line-height:1.4;}
+
+  /* ---------- settings modal ---------- */
+  .modal-bg{
+    position:fixed; inset:0; background:rgba(20,20,20,.5); z-index:50;
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .modal-bg.show{display:flex;}
+  .modal{
+    background:#fff; width:100%; max-width:460px; border-radius:18px 18px 0 0;
+    padding:18px 16px 26px; max-height:85vh; overflow-y:auto;
+  }
+  .modal h3{font-family:'Space Grotesk',sans-serif; margin:0 0 14px;}
+  .modal-close{
+    width:30px;height:30px;border-radius:50%; border:none; background:#f1f1ea; float:right; cursor:pointer;
+  }
+
+  @media print{
+    body *{visibility:hidden;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="bolt">⚡</div>
+      <div>
+        <h1 id="topbarShopName">TOKO WAWAN</h1>
+        <div class="sub">Cetak struk token &amp; tagihan listrik</div>
+      </div>
+    </div>
+    <button class="iconbtn" id="btnSettings" title="Pengaturan toko">⚙️</button>
+  </div>
+
+  <!-- 1. UPLOAD FOTO -->
+  <div class="section">
+    <div class="card">
+      <h2><span class="n">1</span> Foto Struk Asli</h2>
+      <label class="upload-zone" id="uploadZone">
+        <input type="file" accept="image/*" capture="environment" id="fileInput">
+        <div id="uploadPlaceholder">
+          <div class="icon">📷</div>
+          <p>Ketuk untuk ambil foto / pilih foto struk dari aplikasi (Bukalapak, dll)</p>
+        </div>
+        <img id="previewImg" style="display:none;">
+      </label>
+      <button class="btn btn-ai" id="btnAiRead" disabled>🤖 Baca Otomatis dengan AI</button>
+      <div class="status-line" id="aiStatus"></div>
+    </div>
+  </div>
+
+  <!-- 2. JENIS TRANSAKSI -->
+  <div class="section">
+    <div class="card">
+      <h2><span class="n">2</span> Jenis Transaksi</h2>
+      <div class="toggle-group">
+        <button type="button" class="active" data-jenis="prabayar">Token Prabayar</button>
+        <button type="button" data-jenis="pascabayar">Tagihan Pascabayar</button>
+      </div>
+
+      <div class="row2">
+        <div class="field"><label>Tanggal</label><input id="fTanggal" placeholder="22 JUN 2026"></div>
+        <div class="field"><label>Waktu</label><input id="fWaktu" placeholder="05:44 WIB"></div>
+      </div>
+      <div class="field"><label>Nama Pelanggan</label><input id="fNama" placeholder="SUMERI"></div>
+      <div class="row2">
+        <div class="field"><label id="labelMeter">Nomor Meter</label><input id="fMeter" placeholder="86082415174"></div>
+        <div class="field"><label>ID Pelanggan</label><input id="fIdpel" placeholder="533312781750"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Tarif/Daya</label><input id="fTarif" placeholder="R1M/900 VA"></div>
+        <div class="field" id="fieldKwhWrap"><label>Jumlah kWh</label><input id="fKwh" placeholder="140,9 KWh"></div>
+        <div class="field" id="fieldPeriodeWrap" style="display:none;"><label>Periode</label><input id="fPeriode" placeholder="Mei 2026"></div>
+      </div>
+      <div class="field" id="fieldTokenWrap">
+        <label id="labelToken">Kode Token</label>
+        <input id="fToken" placeholder="6265-0010-6294-1785-7148">
+      </div>
+      <div class="field"><label>No. Referensi (opsional)</label><input id="fRef" placeholder="2BK1250FF1BE3EBC734..."></div>
+    </div>
+  </div>
+
+  <!-- 2b. RINCIAN TAGIHAN (khusus pascabayar) -->
+  <div class="section" id="sectionRincian" style="display:none;">
+    <div class="card">
+      <h2><span class="n">2b</span> Rincian Tagihan</h2>
+      <div class="field">
+        <label>💳 Total Bayar di Struk ShopeePay</label>
+        <div class="price-input-wrap" style="margin-top:2px;">
+          <span style="color:var(--muted);font-weight:600;font-size:14px;">Rp</span>
+          <input id="fShopeePay" type="number" placeholder="74316" style="font-size:16px;font-weight:700;font-family:'Space Grotesk',sans-serif;">
+        </div>
+        <div class="status-line show info" id="rincianHint" style="margin-top:6px;">← Isi angka ini dulu, lalu isi Total Bayar ke pelanggan di bagian Harga</div>
+      </div>
+      <div class="r-dash" style="border-top:1px dashed var(--border);margin:10px 0;"></div>
+      <div class="row2">
+        <div class="field">
+          <label>Total Tagihan PLN <span style="color:var(--success);font-size:10px;">✓ otomatis</span></label>
+          <input id="fTagihan" type="number" placeholder="—" readonly style="background:#f5f5f0;color:var(--muted);cursor:not-allowed;">
+        </div>
+        <div class="field">
+          <label>Denda <span style="color:var(--success);font-size:10px;">✓ otomatis</span></label>
+          <input id="fDenda" type="number" placeholder="—" readonly style="background:#f5f5f0;color:var(--muted);cursor:not-allowed;">
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:4px;">
+          <label>Biaya Layanan <span style="color:var(--success);font-size:10px;">✓ otomatis (dari Total Bayar)</span></label>
+          <input id="fLayanan" type="number" placeholder="—" readonly style="background:#f5f5f0;color:var(--muted);cursor:not-allowed;">
+        </div>
+      <div class="margin-badge zero" id="rincianSumBadge">Total rincian: Rp0</div>
+    </div>
+  </div>
+
+  <!-- 3. HARGA -->
+  <div class="section">
+    <div class="card">
+      <h2><span class="n">3</span> Harga</h2>
+      <div class="field" id="fieldModalWrap">
+        <label>Harga Modal <span style="color:var(--muted);font-size:10px;">(untuk prabayar — tidak ikut tercetak)</span></label>
+        <input id="fModal" type="number" placeholder="205000">
+      </div>
+      <div class="price-box">
+        <label>Total Bayar ke Pelanggan — isi manual, biaya layanan otomatis terhitung</label>
+        <div class="price-input-wrap">
+          <span>Rp</span>
+          <input id="fTotal" type="number" placeholder="205000">
+        </div>
+        <div class="margin-badge zero" id="marginBadge">Isi harga modal untuk lihat margin</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. PREVIEW -->
+  <div class="section">
+    <div class="card" style="background:transparent; border:none; padding:0; box-shadow:none;">
+      <h2 style="padding-left:4px;"><span class="n">4</span> Preview Struk</h2>
+      <div class="receipt-wrap">
+        <div class="receipt" id="receiptPreview"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. HISTORY -->
+  <div class="section">
+    <div class="card">
+      <h2><span class="n">5</span> Transaksi Terakhir</h2>
+      <div id="historyList"><div class="empty-hint">Belum ada riwayat transaksi.</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- sticky print bar -->
+<div class="actionbar">
+  <div class="grid3">
+    <button class="btn btn-bt" id="btnBluetooth"><span class="ic">🔵</span>Bluetooth</button>
+    <button class="btn btn-rawbt" id="btnRawbt"><span class="ic">📲</span>RawBT</button>
+    <button class="btn btn-print" id="btnSystemPrint"><span class="ic">🖥️</span>Print Dialog</button>
+  </div>
+  <div class="hint">Coba <b>Bluetooth</b> dulu. Kalau printer gak ketemu, pakai <b>RawBT</b> (app gratis) atau <b>Print Dialog</b>.</div>
+</div>
+
+<!-- settings modal -->
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <button class="modal-close" id="closeSettings">✕</button>
+    <h3>Pengaturan Toko</h3>
+    <div class="field"><label>Nama Toko (tercetak besar di atas)</label><input id="sShopName"></div>
+    <div class="field"><label>Alamat / Catatan kecil (opsional)</label><input id="sShopAddr" placeholder="Jl. Medan KM.10"></div>
+    <div class="field"><label>Catatan footer struk</label><textarea id="sFooter" rows="2"></textarea></div>
+    <div class="field">
+      <label>Lebar Kertas Thermal</label>
+      <select id="sPaperWidth">
+        <option value="32">58mm (32 karakter)</option>
+        <option value="48">80mm (48 karakter)</option>
+      </select>
+    </div>
+    <button class="btn btn-ai" id="btnSaveSettings" style="margin-top:6px;">Simpan Pengaturan</button>
+  </div>
+</div>
+
+<script>
+/* =================== STORAGE (adaptif: window.storage di dalam Claude, localStorage di luar) =================== */
+const storage = {
+  async get(key){
+    try{
+      if(window.storage){ const r = await window.storage.get(key); return r ? r.value : null; }
+      return localStorage.getItem(key);
+    }catch(e){ return null; }
+  },
+  async set(key, value){
+    try{
+      if(window.storage){ await window.storage.set(key, value); }
+      else{ localStorage.setItem(key, value); }
+    }catch(e){ console.warn('storage set failed', e); }
+  }
+};
+
+/* =================== STATE =================== */
+let shop = { name:'TOKO WAWAN', address:'', footer:'Simpan struk ini sebagai bukti transaksi yang sah', paperWidth:32 };
+let receipt = {
+  jenis:'prabayar', tanggal:'', waktu:'', nama:'', nomorMeter:'', idPelanggan:'',
+  tarifDaya:'', jumlahKwh:'', kodeToken:'', noReferensi:'', hargaModal:'', totalBayar:'',
+  periode:'', totalTagihan:'', totalDenda:'', biayaAdmin:'', biayaLayanan:''
+};
+let uploadedImage = null; // {base64, mediaType}
+let history_ = [];
+
+/* =================== INIT =================== */
+(async function init(){
+  const savedShop = await storage.get('shop_settings');
+  if(savedShop){ try{ shop = {...shop, ...JSON.parse(savedShop)}; }catch(e){} }
+  const savedHist = await storage.get('riwayat');
+  if(savedHist){ try{ history_ = JSON.parse(savedHist); }catch(e){} }
+  applyShopToUi();
+  renderHistory();
+  renderPreview();
+})();
+
+function applyShopToUi(){
+  document.getElementById('topbarShopName').textContent = shop.name || 'TOKO WAWAN';
+  document.getElementById('sShopName').value = shop.name;
+  document.getElementById('sShopAddr').value = shop.address;
+  document.getElementById('sFooter').value = shop.footer;
+  document.getElementById('sPaperWidth').value = String(shop.paperWidth);
+}
+
+/* =================== UPLOAD & AI READ =================== */
+const fileInput = document.getElementById('fileInput');
+const uploadZone = document.getElementById('uploadZone');
+const previewImg = document.getElementById('previewImg');
+const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+const btnAiRead = document.getElementById('btnAiRead');
+const aiStatus = document.getElementById('aiStatus');
+
+fileInput.addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const compressed = await compressImage(file, 1280, 0.85);
+  uploadedImage = compressed;
+  previewImg.src = 'data:'+compressed.mediaType+';base64,'+compressed.base64;
+  previewImg.style.display = 'block';
+  uploadPlaceholder.style.display = 'none';
+  uploadZone.classList.add('has-img');
+  btnAiRead.disabled = false;
+  setStatus(aiStatus, '', '');
+});
+
+function compressImage(file, maxDim, quality){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = ()=>{ img.src = reader.result; };
+    reader.onerror = reject;
+    img.onload = ()=>{
+      let {width, height} = img;
+      if(width > height && width > maxDim){ height = height*(maxDim/width); width = maxDim; }
+      else if(height > maxDim){ width = width*(maxDim/height); height = maxDim; }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL('image/jpeg', quality);
+      resolve({ base64: dataUrl.split(',')[1], mediaType:'image/jpeg' });
+    };
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function setStatus(el, type, msg){
+  if(!msg){ el.className='status-line'; el.textContent=''; return; }
+  el.className = 'status-line show '+type;
+  el.textContent = msg;
+}
+
+btnAiRead.addEventListener('click', async ()=>{
+  if(!uploadedImage) return;
+  btnAiRead.disabled = true;
+  btnAiRead.textContent = '⏳ Membaca struk...';
+  setStatus(aiStatus, 'info', 'AI sedang membaca foto struk, tunggu sebentar...');
+  try{
+    const data = await extractWithAI(uploadedImage);
+    fillFormFromAi(data);
+    setStatus(aiStatus, 'ok', 'Berhasil dibaca. Cek lagi semua kolom sebelum cetak, terutama total bayar.');
+  }catch(err){
+    console.error(err);
+    setStatus(aiStatus, 'err', 'Gagal baca otomatis (fitur ini butuh koneksi & hanya jalan saat dibuka lewat chat Claude). Isi kolom di bawah secara manual ya.');
+  }finally{
+    btnAiRead.disabled = false;
+    btnAiRead.textContent = '🤖 Baca Otomatis dengan AI';
+  }
+});
+
+async function extractWithAI(image){
+  const system = `Kamu adalah asisten OCR untuk struk pembelian token listrik PLN prabayar atau struk tagihan listrik pascabayar dari Indonesia (bisa dari aplikasi PPOB seperti Bukalapak, toko pulsa, dll, format bisa berbeda-beda).
+Balas HANYA dengan JSON murni (tanpa markdown, tanpa penjelasan), dengan struktur tepat seperti ini:
+{"jenis":"prabayar atau pascabayar","tanggal":"","waktu":"","nama":"","nomorMeter":"","idPelanggan":"","tarifDaya":"","jumlahKwh":"","kodeToken":"","noReferensi":"","totalBayar":0,"periode":"","totalTagihan":0,"totalDenda":0,"biayaAdmin":0,"biayaLayanan":0}
+Catatan field:
+- Untuk "prabayar": isi nomorMeter, jumlahKwh, kodeToken. Kosongkan periode, totalTagihan, totalDenda, biayaAdmin, biayaLayanan.
+- Untuk "pascabayar": isi periode (contoh "Mei 2026"), nomorMeter diisi dengan nilai STAND METER, totalTagihan, totalDenda, biayaAdmin, biayaLayanan dari rincian di struk. Kosongkan jumlahKwh dan kodeToken.
+Jika suatu field tidak terlihat di foto, isi dengan string kosong "" (atau 0 untuk field angka). Semua field angka harus angka murni tanpa simbol Rp atau titik. totalBayar adalah nilai TOTAL akhir di struk.`;
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model:'claude-sonnet-4-6',
+      max_tokens: 1000,
+      system: system,
+      messages:[{
+        role:'user',
+        content:[
+          { type:'image', source:{ type:'base64', media_type: image.mediaType, data: image.base64 } },
+          { type:'text', text:'Ekstrak data struk ini sesuai instruksi system. Balas hanya JSON.' }
+        ]
+      }]
+    })
+  });
+  if(!resp.ok) throw new Error('API error '+resp.status);
+  const json = await resp.json();
+  const textBlock = (json.content || []).find(c=>c.type==='text');
+  if(!textBlock) throw new Error('no text in response');
+  let cleaned = textBlock.text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+  return JSON.parse(cleaned);
+}
+
+function fillFormFromAi(d){
+  if(d.jenis === 'pascabayar' || d.jenis === 'prabayar') setJenis(d.jenis);
+  document.getElementById('fTanggal').value = d.tanggal || '';
+  document.getElementById('fWaktu').value   = d.waktu || '';
+  document.getElementById('fNama').value    = d.nama || '';
+  document.getElementById('fMeter').value   = d.nomorMeter || '';
+  document.getElementById('fIdpel').value   = d.idPelanggan || '';
+  document.getElementById('fTarif').value   = d.tarifDaya || '';
+  document.getElementById('fKwh').value     = d.jumlahKwh || '';
+  document.getElementById('fToken').value   = d.kodeToken || '';
+  document.getElementById('fRef').value     = d.noReferensi || '';
+  document.getElementById('fPeriode').value = d.periode || '';
+  if(d.jenis === 'pascabayar' && d.totalBayar){
+    // Isi fShopeePay dari totalBayar — sistem akan hitung otomatis
+    document.getElementById('fShopeePay').value = d.totalBayar;
+    // Kosongkan fTotal agar dihitung ulang otomatis
+    document.getElementById('fTotal').value = '';
+  } else if(d.totalBayar){
+    document.getElementById('fModal').value = d.totalBayar;
+    document.getElementById('fTotal').value = d.totalBayar;
+  }
+  syncReceiptFromForm();
+}
+
+/* =================== JENIS TOGGLE =================== */
+document.querySelectorAll('.toggle-group button').forEach(btn=>{
+  btn.addEventListener('click', ()=> setJenis(btn.dataset.jenis));
+});
+function setJenis(jenis){
+  receipt.jenis = jenis;
+  document.querySelectorAll('.toggle-group button').forEach(b=> b.classList.toggle('active', b.dataset.jenis===jenis));
+  const isPra = jenis === 'prabayar';
+  document.getElementById('labelMeter').textContent = isPra ? 'Nomor Meter' : 'Stand Meter';
+  document.getElementById('fMeter').placeholder = isPra ? '86082415174' : '00004053-00004138';
+  document.getElementById('fieldKwhWrap').style.display = isPra ? '' : 'none';
+  document.getElementById('fieldPeriodeWrap').style.display = isPra ? 'none' : '';
+  document.getElementById('fieldTokenWrap').style.display = isPra ? '' : 'none';
+  document.getElementById('sectionRincian').style.display = isPra ? 'none' : '';
+  document.getElementById('fieldModalWrap').style.display = isPra ? '' : 'none';
+
+  renderPreview();
+}
+
+/* =================== FORM SYNC =================== */
+const formIds = ['fTanggal','fWaktu','fNama','fMeter','fIdpel','fTarif','fKwh','fToken','fRef','fModal','fTotal','fPeriode','fShopeePay','fLayanan'];
+formIds.forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', syncReceiptFromForm);
+});
+// fTotal khusus: saat diubah manual di pascabayar, hitung ulang biaya layanan
+document.getElementById('fTotal').addEventListener('input', ()=>{
+  if(receipt.jenis === 'pascabayar'){
+    hitungBiayaLayanan();
+    // update receipt.biayaLayanan langsung
+    receipt.biayaLayanan = document.getElementById('fLayanan').value;
+    updateRincianBadge();
+    renderPreview();
+  }
+});
+
+/* ---------- hitung denda berdasarkan tarif daya & tanggal ---------- */
+function hitungDenda(tanggal, tarifDaya){
+  // Cek apakah tanggal bayar > 20
+  const tgl = String(tanggal || '').trim();
+  // Coba parse tanggal — bisa format "20 JUN 2026" atau "2026-06-20" atau "20/06/2026"
+  let hari = 0;
+  const m1 = tgl.match(/^(\d{1,2})[\/\-\s]/); // awalan angka
+  if(m1) hari = parseInt(m1[1]);
+  else{
+    const m2 = tgl.match(/\d{4}[\-\/](\d{2})[\-\/](\d{2})/); // YYYY-MM-DD
+    if(m2) hari = parseInt(m2[2]);
+    else{
+      const m3 = tgl.match(/(\d{1,2})\s+[A-Z]/i); // "20 JUN 2026"
+      if(m3) hari = parseInt(m3[1]);
+    }
+  }
+  if(hari === 0 || hari <= 20) return 0; // tidak kena denda
+
+  // Tentukan daya dari tarifDaya, misal "R1 / 450 VA" atau "R1M/900VA"
+  const daya = String(tarifDaya || '').replace(/\s/g,'').toLowerCase();
+  if(daya.includes('450')) return 3000;
+  if(daya.includes('900')) return 3000;
+  if(daya.includes('1300')) return 5000;
+  // Default jika tidak dikenali — pakai 0 (aman)
+  return 0;
+}
+
+function autoHitungRincianPascabayar(){
+  const shopeePay = parseFloat(document.getElementById('fShopeePay').value) || 0;
+  if(!shopeePay) return;
+
+  // Hitung denda berdasarkan tanggal & tarif daya
+  const tanggal   = document.getElementById('fTanggal').value;
+  const tarifDaya = document.getElementById('fTarif').value;
+  const denda = hitungDenda(tanggal, tarifDaya);
+
+  // Total Tagihan PLN = ShopeePay (langsung)
+  const totalTagihan = shopeePay;
+
+  document.getElementById('fTagihan').value = totalTagihan > 0 ? totalTagihan : '';
+  document.getElementById('fDenda').value   = denda > 0 ? denda : '';
+
+  // Harga modal = total yang keluar dari kantong (shopeePay)
+  document.getElementById('fModal').value   = shopeePay;
+
+  // Update hint denda
+  const hint = document.getElementById('rincianHint');
+  if(denda > 0){
+    hint.className = 'status-line show err';
+    hint.textContent = `⚠️ Bayar tgl ${document.getElementById('fTanggal').value || '?'} → kena DENDA Rp${denda.toLocaleString('id-ID')} (bayar setelah tgl 20)`;
+  } else {
+    hint.className = 'status-line show ok';
+    hint.textContent = `✅ Tidak ada denda (bayar ≤ tgl 20)`;
+  }
+}
+
+function hitungBiayaLayanan(){
+  const fTotal  = parseFloat(document.getElementById('fTotal').value) || 0;
+  const tagihan = parseFloat(document.getElementById('fTagihan').value) || 0;
+  const denda   = parseFloat(document.getElementById('fDenda').value) || 0;
+  if(!fTotal || !tagihan) return;
+  // Biaya layanan = harga jual ke pelanggan - total tagihan PLN - denda
+  const layanan = fTotal - tagihan - denda;
+  document.getElementById('fLayanan').value = layanan >= 0 ? layanan : 0;
+}
+
+function syncReceiptFromForm(){
+  // Jika pascabayar & ada nilai ShopeePay, hitung otomatis
+  if(receipt.jenis === 'pascabayar'){
+    const sp = document.getElementById('fShopeePay').value;
+    if(sp) autoHitungRincianPascabayar();
+    else hitungBiayaLayanan(); // tetap hitung layanan dari fTotal
+  }
+
+  receipt.tanggal     = document.getElementById('fTanggal').value;
+  receipt.waktu       = document.getElementById('fWaktu').value;
+  receipt.nama        = document.getElementById('fNama').value;
+  receipt.nomorMeter  = document.getElementById('fMeter').value;
+  receipt.idPelanggan = document.getElementById('fIdpel').value;
+  receipt.tarifDaya   = document.getElementById('fTarif').value;
+  receipt.jumlahKwh   = document.getElementById('fKwh').value;
+  receipt.kodeToken   = document.getElementById('fToken').value;
+  receipt.noReferensi = document.getElementById('fRef').value;
+  receipt.hargaModal  = document.getElementById('fModal').value;
+  receipt.totalBayar  = document.getElementById('fTotal').value;
+  receipt.periode     = document.getElementById('fPeriode').value;
+  receipt.totalTagihan = document.getElementById('fTagihan').value;
+  receipt.totalDenda  = document.getElementById('fDenda').value;
+  receipt.biayaAdmin  = '0';
+  receipt.biayaLayanan = document.getElementById('fLayanan').value;
+  updateMarginBadge();
+  updateRincianBadge();
+  renderPreview();
+}
+function updateRincianBadge(){
+  const badge = document.getElementById('rincianSumBadge');
+  const sum = ['totalTagihan','totalDenda','biayaLayanan']
+    .reduce((acc,k)=> acc + (parseFloat(receipt[k])||0), 0);
+  const totalBayar = parseFloat(receipt.totalBayar) || 0;
+  const selisih = totalBayar - sum;
+  if(sum === 0){
+    badge.className = 'margin-badge zero';
+    badge.textContent = 'Isi Total Bayar ShopeePay di atas untuk hitung otomatis';
+  } else if(Math.abs(selisih) < 1){
+    badge.className = 'margin-badge pos';
+    badge.textContent = '✅ Total rincian cocok: Rp'+rupiah(sum);
+  } else {
+    badge.className = 'margin-badge zero';
+    badge.textContent = 'Total rincian: Rp'+rupiah(sum)+' (total bayar: Rp'+rupiah(totalBayar)+')';
+  }
+}
+function updateMarginBadge(){
+  const badge = document.getElementById('marginBadge');
+  const modal = parseFloat(receipt.hargaModal);
+  const total = parseFloat(receipt.totalBayar);
+  if(isNaN(modal) || modal===0 || isNaN(total)){
+    badge.className = 'margin-badge zero';
+    badge.textContent = 'Isi harga modal untuk lihat margin';
+    return;
+  }
+  const margin = total - modal;
+  badge.className = 'margin-badge ' + (margin>0?'pos':margin<0?'neg':'zero');
+  badge.textContent = (margin>=0?'Untung Rp ':'Rugi Rp ') + Math.abs(margin).toLocaleString('id-ID');
+}
+
+/* =================== FORMAT HELPERS =================== */
+function rupiah(n){
+  const num = parseFloat(n);
+  if(isNaN(num)) return '0';
+  return num.toLocaleString('id-ID');
+}
+function groupToken(str){
+  const clean = (str||'').replace(/[^A-Za-z0-9]/g,'');
+  if(!clean) return '';
+  return clean.replace(/(.{4})/g,'$1 ').trim();
+}
+
+/* =================== PREVIEW RENDER =================== */
+function renderPreview(){
+  const el = document.getElementById('receiptPreview');
+  const isPra = receipt.jenis === 'prabayar';
+  el.innerHTML = `
+    <div class="r-center r-shop">${escapeHtml(shop.name || 'TOKO WAWAN')}</div>
+    ${shop.address ? `<div class="r-center r-addr">${escapeHtml(shop.address)}</div>` : ''}
+    <div class="r-dash"></div>
+    <div class="r-center">${isPra?'BUKTI TRANSAKSI<br>TOKEN LISTRIK':'BUKTI TRANSAKSI<br>TAGIHAN LISTRIK'}</div>
+    <div class="r-center" style="font-size:11px;color:#555;">${escapeHtml(receipt.tanggal)} ${escapeHtml(receipt.waktu)}</div>
+    <div class="r-dash"></div>
+    ${!isPra ? rRow('PERIODE', receipt.periode) : ''}
+    ${!isPra ? rRow('STAND METER', receipt.nomorMeter) : ''}
+    ${rRow('NAMA', receipt.nama)}
+    ${isPra ? rRow('NO METER', receipt.nomorMeter) : ''}
+    ${rRow('ID PEL', receipt.idPelanggan)}
+    ${rRow('TARIF/DAYA', receipt.tarifDaya)}
+    ${receipt.noReferensi ? rRow('NO REF', receipt.noReferensi) : ''}
+    ${isPra ? rRow('JML KWH', receipt.jumlahKwh) : ''}
+    <div class="r-dash"></div>
+    ${isPra ? `
+      <div class="r-center" style="font-size:11px;">KODE TOKEN</div>
+      <div class="r-token">${escapeHtml(groupToken(receipt.kodeToken)) || '----'}</div>
+      <div class="r-dash"></div>
+    ` : `
+      ${rRow('TOTAL TAGIHAN', 'Rp'+rupiah(receipt.totalTagihan))}
+      ${receipt.totalDenda && parseFloat(receipt.totalDenda)>0 ? rRow('DENDA', 'Rp'+rupiah(receipt.totalDenda)) : ''}
+      <div class="r-dash"></div>
+    `}
+    <div class="r-total"><span>TOTAL BAYAR</span><span>Rp${rupiah(receipt.totalBayar)}</span></div>
+    <div class="r-footer">${escapeHtml(shop.footer)}</div>
+    ${!isPra ? `<div class="r-footer">Perbedaan harga bayar dengan rincian merupakan biaya tambahan dari penjual.<br>Bukti transaksi ini dinyatakan sah oleh PLN.</div>` : ''}
+  `;
+}
+function rRow(label, value){
+  return `<div class="r-row"><span class="l">${escapeHtml(label)}</span><span class="v">${escapeHtml(value||'-')}</span></div>`;
+}
+function escapeHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* =================== ESC/POS BUILDER =================== */
+function buildEscPos(){
+  const W = shop.paperWidth || 32;
+  const bytes = [];
+  const enc = (s)=> Array.from(new TextEncoder().encode(s));
+  const push = (...arr)=> arr.forEach(a=> bytes.push(a));
+  const pushBytes = (arr)=> arr.forEach(b=> bytes.push(b));
+  const pushText = (s)=> pushBytes(enc(s));
+  const NL = ()=> push(0x0A);
+  const ALIGN_L = ()=> push(0x1B,0x61,0x00);
+  const ALIGN_C = ()=> push(0x1B,0x61,0x01);
+  const BOLD_ON = ()=> push(0x1B,0x45,0x01);
+  const BOLD_OFF = ()=> push(0x1B,0x45,0x00);
+  const BIG_ON = ()=> push(0x1D,0x21,0x11);
+  const BIG_OFF = ()=> push(0x1D,0x21,0x00);
+  const divider = ()=> '-'.repeat(W);
+
+  function wrapCenter(text){
+    const words = text.split(' ');
+    let lines = [], cur = '';
+    words.forEach(w=>{
+      if((cur+' '+w).trim().length > W){ lines.push(cur.trim()); cur = w; }
+      else cur = (cur+' '+w).trim();
+    });
+    if(cur) lines.push(cur);
+    return lines;
+  }
+  function twoCol(label, value){
+    value = value || '-';
+    if(label.length + value.length + 1 > W){
+      return label + '\n' + value.padStart(W);
+    }
+    return label + value.padStart(W - label.length);
+  }
+  function tokenLines(token){
+    const grouped = groupToken(token);
+    if(!grouped) return ['----'];
+    const groups = grouped.split(' ');
+    const perLine = Math.max(1, Math.floor((W) / 5));
+    const lines = [];
+    for(let i=0;i<groups.length;i+=perLine){
+      lines.push(groups.slice(i,i+perLine).join(' '));
+    }
+    return lines;
+  }
+
+  push(0x1B,0x40); // init
+  ALIGN_C(); BOLD_ON(); BIG_ON();
+  pushText((shop.name||'TOKO WAWAN').toUpperCase()); NL();
+  BIG_OFF(); BOLD_OFF();
+  if(shop.address){ wrapCenter(shop.address).forEach(l=>{ pushText(l); NL(); }); }
+  ALIGN_L();
+  pushText(divider()); NL();
+  ALIGN_C();
+  pushText(receipt.jenis==='prabayar' ? 'BUKTI TRANSAKSI' : 'BUKTI TAGIHAN'); NL();
+  pushText(receipt.jenis==='prabayar' ? 'TOKEN LISTRIK' : 'LISTRIK PASCABAYAR'); NL();
+  pushText(`${receipt.tanggal}  ${receipt.waktu}`); NL();
+  ALIGN_L();
+  pushText(divider()); NL();
+  if(receipt.jenis!=='prabayar'){
+    pushText(twoCol('PERIODE', receipt.periode)); NL();
+    pushText(twoCol('STAND METER', receipt.nomorMeter)); NL();
+  }
+  pushText(twoCol('NAMA', receipt.nama)); NL();
+  if(receipt.jenis==='prabayar'){ pushText(twoCol('NO METER', receipt.nomorMeter)); NL(); }
+  pushText(twoCol('ID PEL', receipt.idPelanggan)); NL();
+  pushText(twoCol('TARIF/DAYA', receipt.tarifDaya)); NL();
+  if(receipt.noReferensi){ pushText(twoCol('NO REF', receipt.noReferensi)); NL(); }
+  if(receipt.jenis==='prabayar'){ pushText(twoCol('JML KWH', receipt.jumlahKwh)); NL(); }
+  pushText(divider()); NL();
+  if(receipt.jenis==='prabayar'){
+    ALIGN_C();
+    pushText('KODE TOKEN'); NL();
+    BOLD_ON(); BIG_ON();
+    tokenLines(receipt.kodeToken).forEach(l=>{ pushText(l); NL(); });
+    BIG_OFF(); BOLD_OFF();
+    ALIGN_L();
+  } else {
+    pushText(twoCol('TOTAL TAGIHAN', 'Rp'+rupiah(receipt.totalTagihan))); NL();
+    if(parseFloat(receipt.totalDenda)>0){ pushText(twoCol('DENDA', 'Rp'+rupiah(receipt.totalDenda))); NL(); }
+  }
+  pushText(divider()); NL();
+  BOLD_ON();
+  pushText(twoCol('TOTAL BAYAR', 'Rp'+rupiah(receipt.totalBayar))); NL();
+  BOLD_OFF();
+  pushText(divider()); NL();
+  ALIGN_C();
+  wrapCenter(shop.footer || '').forEach(l=>{ pushText(l); NL(); });
+  if(receipt.jenis!=='prabayar'){
+    wrapCenter('Perbedaan harga bayar dengan rincian merupakan biaya tambahan dari penjual.').forEach(l=>{ pushText(l); NL(); });
+    wrapCenter('Bukti transaksi ini dinyatakan sah oleh PLN.').forEach(l=>{ pushText(l); NL(); });
+  }
+  NL(); NL(); NL();
+  return new Uint8Array(bytes);
+}
+
+/* =================== PRINT: WEB BLUETOOTH =================== */
+document.getElementById('btnBluetooth').addEventListener('click', async ()=>{
+  const btn = document.getElementById('btnBluetooth');
+  if(!navigator.bluetooth){
+    alert('Browser ini tidak mendukung Web Bluetooth, atau fitur Bluetooth diblokir di dalam jendela chat ini.\n\nCoba buka file ini langsung di Chrome HP (bukan di dalam chat), atau pakai tombol RawBT / Print Dialog sebagai alternatif.');
+    return;
+  }
+  const original = btn.innerHTML;
+  btn.innerHTML = '<span class="ic">🔄</span>Mencari...';
+  try{
+    const knownServices = [
+      '000018f0-0000-1000-8000-00805f9b34fb',
+      '0000ff00-0000-1000-8000-00805f9b34fb',
+      '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+      'e78109c0-9b50-11e4-8000-00805f9b34fb',
+      '0000ffe0-0000-1000-8000-00805f9b34fb'
+    ];
+    const device = await navigator.bluetooth.requestDevice({ acceptAllDevices:true, optionalServices: knownServices });
+    btn.innerHTML = '<span class="ic">🔄</span>Connecting...';
+    const server = await device.gatt.connect();
+    const services = await server.getPrimaryServices();
+    let writeChar = null;
+    for(const svc of services){
+      const chars = await svc.getCharacteristics();
+      for(const ch of chars){
+        if(ch.properties.write || ch.properties.writeWithoutResponse){ writeChar = ch; break; }
+      }
+      if(writeChar) break;
+    }
+    if(!writeChar) throw new Error('Tidak ada characteristic yang bisa ditulis di printer ini.');
+    const bytes = buildEscPos();
+    const chunkSize = 150;
+    for(let i=0;i<bytes.length;i+=chunkSize){
+      const chunk = bytes.slice(i, i+chunkSize);
+      if(writeChar.properties.writeWithoutResponse) await writeChar.writeValueWithoutResponse(chunk);
+      else await writeChar.writeValue(chunk);
+      await new Promise(r=>setTimeout(r,30));
+    }
+    saveToHistory();
+    btn.innerHTML = '<span class="ic">✅</span>Terkirim';
+  }catch(err){
+    console.error(err);
+    alert('Gagal cetak via Bluetooth langsung: '+ (err.message||err) +'\n\nKemungkinan printer ini pakai Bluetooth Classic (SPP) yang tidak didukung browser. Coba tombol RawBT atau Print Dialog.');
+    btn.innerHTML = original;
+  }
+  setTimeout(()=>{ btn.innerHTML = original; }, 2500);
+});
+
+/* =================== PRINT: RawBT ===================
+   RawBT (app gratis di Play Store) menerima data mentah ESC/POS lewat
+   custom scheme rawbt:base64,<data> dan meneruskannya ke printer Bluetooth
+   classic (SPP) yang sudah dipasangkan di pengaturan RawBT. */
+document.getElementById('btnRawbt').addEventListener('click', ()=>{
+  try{
+    const bytes = buildEscPos();
+    let binary = '';
+    bytes.forEach(b=> binary += String.fromCharCode(b));
+    const b64 = btoa(binary);
+    const link = 'rawbt:base64,' + b64;
+    saveToHistory();
+    window.location.href = link;
+  }catch(err){
+    alert('Gagal menyiapkan data untuk RawBT: '+err.message);
+  }
+});
+
+/* =================== PRINT: SYSTEM DIALOG =================== */
+document.getElementById('btnSystemPrint').addEventListener('click', ()=>{
+  const html = document.getElementById('receiptPreview').outerHTML;
+  const w = window.open('', '_blank', 'width=400,height=600');
+  w.document.write(`
+    <html><head><title>Cetak Struk</title>
+    <style>
+      body{font-family:'JetBrains Mono',monospace; margin:0; padding:10px; width:${shop.paperWidth===48?'80mm':'58mm'};}
+      .r-center{text-align:center;} .r-shop{font-weight:700;font-size:16px;}
+      .r-addr{font-size:11px;color:#555;}
+      .r-dash{border-top:1px dashed #888;margin:6px 0;}
+      .r-row{display:flex;justify-content:space-between;font-size:12px;}
+      .r-token{font-weight:700;font-size:15px;text-align:center;word-break:break-all;}
+      .r-total{display:flex;justify-content:space-between;font-weight:700;font-size:13px;}
+      .r-footer{font-size:10px;color:#555;text-align:center;margin-top:6px;}
+    </style></head><body>${html}</body></html>
+  `);
+  w.document.close();
+  saveToHistory();
+  setTimeout(()=>{ w.print(); }, 300);
+});
+
+/* =================== HISTORY =================== */
+async function saveToHistory(){
+  const entry = { ...receipt, shopeePay: document.getElementById('fShopeePay').value, shopName: shop.name, savedAt: new Date().toISOString() };
+  history_.unshift(entry);
+  history_ = history_.slice(0, 20);
+  await storage.set('riwayat', JSON.stringify(history_));
+  renderHistory();
+}
+function renderHistory(){
+  const el = document.getElementById('historyList');
+  if(!history_.length){ el.innerHTML = '<div class="empty-hint">Belum ada riwayat transaksi.</div>'; return; }
+  el.innerHTML = history_.map((h, idx)=>`
+    <div class="hist-item">
+      <div>
+        <div><b>${escapeHtml(h.nama||'-')}</b> · Rp${rupiah(h.totalBayar)}</div>
+        <div class="meta">${escapeHtml(h.jenis)} · ${escapeHtml(h.tanggal)} ${escapeHtml(h.waktu)}</div>
+      </div>
+      <button data-idx="${idx}" class="btn-reprint">Muat</button>
+    </div>
+  `).join('');
+  el.querySelectorAll('.btn-reprint').forEach(b=>{
+    b.addEventListener('click', ()=> loadFromHistory(parseInt(b.dataset.idx)));
+  });
+}
+function loadFromHistory(idx){
+  const h = history_[idx];
+  if(!h) return;
+  setJenis(h.jenis);
+  document.getElementById('fTanggal').value = h.tanggal||'';
+  document.getElementById('fWaktu').value = h.waktu||'';
+  document.getElementById('fNama').value = h.nama||'';
+  document.getElementById('fMeter').value = h.nomorMeter||'';
+  document.getElementById('fIdpel').value = h.idPelanggan||'';
+  document.getElementById('fTarif').value = h.tarifDaya||'';
+  document.getElementById('fKwh').value = h.jumlahKwh||'';
+  document.getElementById('fToken').value = h.kodeToken||'';
+  document.getElementById('fRef').value = h.noReferensi||'';
+  document.getElementById('fModal').value = h.hargaModal||'';
+  document.getElementById('fTotal').value = h.totalBayar||'';
+  document.getElementById('fPeriode').value = h.periode||'';
+  document.getElementById('fShopeePay').value = h.shopeePay||'';
+  document.getElementById('fTagihan').value = h.totalTagihan||'';
+  document.getElementById('fDenda').value = h.totalDenda||'';
+  document.getElementById('fLayanan').value = h.biayaLayanan||'';
+  syncReceiptFromForm();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* =================== SETTINGS MODAL =================== */
+const settingsModal = document.getElementById('settingsModal');
+document.getElementById('btnSettings').addEventListener('click', ()=> settingsModal.classList.add('show'));
+document.getElementById('closeSettings').addEventListener('click', ()=> settingsModal.classList.remove('show'));
+settingsModal.addEventListener('click', (e)=>{ if(e.target===settingsModal) settingsModal.classList.remove('show'); });
+
+document.getElementById('btnSaveSettings').addEventListener('click', async ()=>{
+  shop.name = document.getElementById('sShopName').value || 'TOKO WAWAN';
+  shop.address = document.getElementById('sShopAddr').value;
+  shop.footer = document.getElementById('sFooter').value;
+  shop.paperWidth = parseInt(document.getElementById('sPaperWidth').value) || 32;
+  await storage.set('shop_settings', JSON.stringify(shop));
+  applyShopToUi();
+  renderPreview();
+  settingsModal.classList.remove('show');
+});
+</script>
+</body>
+</html>
