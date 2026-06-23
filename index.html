@@ -528,7 +528,7 @@ btnAiRead.addEventListener('click', async ()=>{
 });
 
 async function extractWithAI(image){
-  const GEMINI_KEY = 'AQ.Ab8RN6JoaMxN4W_1KAtE6Am530JYSj2IjI-Wq26edeTmFyjyxg';
+  const GEMINI_KEY = 'AQ.Ab8RN6JKyboBeh9O0fkGa9ZPciMoMTjFF6kLb2NisLpembxZ3w';
   const prompt = `Kamu adalah asisten OCR untuk struk pembelian token listrik PLN prabayar atau struk tagihan listrik pascabayar dari Indonesia (bisa dari aplikasi ShopeePay, PPOB, toko pulsa, dll).
 Balas HANYA dengan JSON murni (tanpa markdown, tanpa penjelasan), dengan struktur tepat seperti ini:
 {"jenis":"prabayar atau pascabayar","tanggal":"","waktu":"","nama":"","nomorMeter":"","idPelanggan":"","tarifDaya":"","jumlahKwh":"","kodeToken":"","noReferensi":"","totalBayar":0,"periode":""}
