@@ -359,7 +359,7 @@
         <label>Total Bayar ke Pelanggan — isi manual, biaya layanan otomatis terhitung</label>
         <div class="price-input-wrap">
           <span>Rp</span>
-          <input id="fTotal" type="number" placeholder="205000">
+          <input id="fTotal" type="text" inputmode="numeric" placeholder="205000">
         </div>
         <div class="margin-badge zero" id="marginBadge">Isi harga modal untuk lihat margin</div>
       </div>
@@ -520,7 +520,7 @@ btnAiRead.addEventListener('click', async ()=>{
     setStatus(aiStatus, 'ok', 'Berhasil dibaca. Cek lagi semua kolom sebelum cetak, terutama total bayar.');
   }catch(err){
     console.error(err);
-    setStatus(aiStatus, 'err', 'Gagal baca otomatis (fitur ini butuh koneksi & hanya jalan saat dibuka lewat chat Claude). Isi kolom di bawah secara manual ya.');
+    setStatus(aiStatus, 'err', 'Gagal baca otomatis. Pastikan ada koneksi internet lalu coba lagi. Atau isi kolom di bawah secara manual ya.');
   }finally{
     btnAiRead.disabled = false;
     btnAiRead.textContent = '🤖 Baca Otomatis dengan AI';
@@ -528,39 +528,52 @@ btnAiRead.addEventListener('click', async ()=>{
 });
 
 async function extractWithAI(image){
-  const system = `Kamu adalah asisten OCR untuk struk pembelian token listrik PLN prabayar atau struk tagihan listrik pascabayar dari Indonesia (bisa dari aplikasi PPOB seperti Bukalapak, toko pulsa, dll, format bisa berbeda-beda).
+  const GEMINI_KEY = 'AQ.Ab8RN6JoaMxN4W_1KAtE6Am530JYSj2IjI-Wq26edeTmFyjyxg';
+  const prompt = `Kamu adalah asisten OCR untuk struk pembelian token listrik PLN prabayar atau struk tagihan listrik pascabayar dari Indonesia (bisa dari aplikasi ShopeePay, PPOB, toko pulsa, dll).
 Balas HANYA dengan JSON murni (tanpa markdown, tanpa penjelasan), dengan struktur tepat seperti ini:
-{"jenis":"prabayar atau pascabayar","tanggal":"","waktu":"","nama":"","nomorMeter":"","idPelanggan":"","tarifDaya":"","jumlahKwh":"","kodeToken":"","noReferensi":"","totalBayar":0,"periode":"","totalTagihan":0,"totalDenda":0,"biayaAdmin":0,"biayaLayanan":0}
-Catatan field:
-- Untuk "prabayar": isi nomorMeter, jumlahKwh, kodeToken. Kosongkan periode, totalTagihan, totalDenda, biayaAdmin, biayaLayanan.
-- Untuk "pascabayar": isi periode (contoh "Mei 2026"), nomorMeter diisi dengan nilai STAND METER, totalTagihan, totalDenda, biayaAdmin, biayaLayanan dari rincian di struk. Kosongkan jumlahKwh dan kodeToken.
-Jika suatu field tidak terlihat di foto, isi dengan string kosong "" (atau 0 untuk field angka). Semua field angka harus angka murni tanpa simbol Rp atau titik. totalBayar adalah nilai TOTAL akhir di struk.`;
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+{"jenis":"prabayar atau pascabayar","tanggal":"","waktu":"","nama":"","nomorMeter":"","idPelanggan":"","tarifDaya":"","jumlahKwh":"","kodeToken":"","noReferensi":"","totalBayar":0,"periode":""}
+
+Aturan field:
+- jenis: "prabayar" jika ada token/kode, "pascabayar" jika ada periode tagihan (BL/TH)
+- tanggal: format asli di struk (misal "2026-06-20" atau "20 JUN 2026")
+- waktu: jam transaksi jika ada (misal "12:01:44")
+- nama: nama pelanggan
+- idPelanggan: nomor ID pelanggan / IDPEL
+- nomorMeter: untuk prabayar = nomor meter, untuk pascabayar = nilai STAND METER (misal "00010049-00010208")
+- tarifDaya: tarif dan daya (misal "R1 / 450 VA")
+- jumlahKwh: hanya untuk prabayar
+- kodeToken: hanya untuk prabayar (20 digit angka)
+- noReferensi: nomor referensi / NO REF
+- totalBayar: WAJIB isi dengan nilai TOTAL BAYAR paling akhir di struk (angka murni tanpa Rp atau titik). Untuk ShopeePay ambil baris "TOTAL BAYAR". Jangan ambil RP TAG PLN atau nilai lain yang bukan total akhir.
+- periode: hanya untuk pascabayar (misal "JUN26" atau "Juni 2026")
+
+Jika field tidak terlihat, isi "" atau 0 untuk angka.`;
+
+  const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
-      model:'claude-sonnet-4-6',
-      max_tokens: 1000,
-      system: system,
-      messages:[{
-        role:'user',
-        content:[
-          { type:'image', source:{ type:'base64', media_type: image.mediaType, data: image.base64 } },
-          { type:'text', text:'Ekstrak data struk ini sesuai instruksi system. Balas hanya JSON.' }
+      contents:[{
+        parts:[
+          { inline_data:{ mime_type: image.mediaType, data: image.base64 } },
+          { text: prompt }
         ]
       }]
     })
   });
-  if(!resp.ok) throw new Error('API error '+resp.status);
+  if(!resp.ok) throw new Error('Gemini API error '+resp.status);
   const json = await resp.json();
-  const textBlock = (json.content || []).find(c=>c.type==='text');
-  if(!textBlock) throw new Error('no text in response');
-  let cleaned = textBlock.text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+  const text = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  if(!text) throw new Error('no text in Gemini response');
+  let cleaned = text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
   return JSON.parse(cleaned);
 }
 
 function fillFormFromAi(d){
+  // Set jenis dulu agar field yang tepat muncul
   if(d.jenis === 'pascabayar' || d.jenis === 'prabayar') setJenis(d.jenis);
+
+  // Isi semua field data
   document.getElementById('fTanggal').value = d.tanggal || '';
   document.getElementById('fWaktu').value   = d.waktu || '';
   document.getElementById('fNama').value    = d.nama || '';
@@ -571,15 +584,18 @@ function fillFormFromAi(d){
   document.getElementById('fToken').value   = d.kodeToken || '';
   document.getElementById('fRef').value     = d.noReferensi || '';
   document.getElementById('fPeriode').value = d.periode || '';
-  if(d.jenis === 'pascabayar' && d.totalBayar){
-    // Isi fShopeePay dari totalBayar — sistem akan hitung otomatis
-    document.getElementById('fShopeePay').value = d.totalBayar;
-    // Kosongkan fTotal agar dihitung ulang otomatis
-    document.getElementById('fTotal').value = '';
-  } else if(d.totalBayar){
-    document.getElementById('fModal').value = d.totalBayar;
-    document.getElementById('fTotal').value = d.totalBayar;
+
+  if(d.jenis === 'pascabayar'){
+    // Isi fShopeePay dari totalBayar — hitung otomatis akan jalan di syncReceiptFromForm
+    document.getElementById('fShopeePay').value = d.totalBayar || '';
+    document.getElementById('fTotal').value = ''; // penjual isi sendiri harga jual
+  } else {
+    // Prabayar: modal & total bayar dari totalBayar
+    document.getElementById('fModal').value = d.totalBayar || '';
+    document.getElementById('fTotal').value = d.totalBayar || '';
   }
+
+  // Trigger sync — ini akan otomatis hitung tagihan, denda, dll
   syncReceiptFromForm();
 }
 
@@ -783,6 +799,7 @@ function renderPreview(){
     ` : `
       ${rRow('TOTAL TAGIHAN', 'Rp'+rupiah(receipt.totalTagihan))}
       ${receipt.totalDenda && parseFloat(receipt.totalDenda)>0 ? rRow('DENDA', 'Rp'+rupiah(receipt.totalDenda)) : ''}
+      ${receipt.biayaLayanan && parseFloat(receipt.biayaLayanan)>0 ? rRow('BIAYA LAYANAN', 'Rp'+rupiah(receipt.biayaLayanan)) : ''}
       <div class="r-dash"></div>
     `}
     <div class="r-total"><span>TOTAL BAYAR</span><span>Rp${rupiah(receipt.totalBayar)}</span></div>
@@ -877,6 +894,7 @@ function buildEscPos(){
   } else {
     pushText(twoCol('TOTAL TAGIHAN', 'Rp'+rupiah(receipt.totalTagihan))); NL();
     if(parseFloat(receipt.totalDenda)>0){ pushText(twoCol('DENDA', 'Rp'+rupiah(receipt.totalDenda))); NL(); }
+    if(parseFloat(receipt.biayaLayanan)>0){ pushText(twoCol('BIAYA LAYANAN', 'Rp'+rupiah(receipt.biayaLayanan))); NL(); }
   }
   pushText(divider()); NL();
   BOLD_ON();
