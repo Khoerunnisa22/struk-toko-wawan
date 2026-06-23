@@ -706,18 +706,19 @@ document.getElementById('fTotal').addEventListener('input', ()=>{
 
 /* ---------- hitung denda berdasarkan tarif daya & tanggal ---------- */
 function hitungDenda(tanggal, tarifDaya){
-  // Cek apakah tanggal bayar > 20
   const tgl = String(tanggal || '').trim();
-  // Coba parse tanggal — bisa format "20 JUN 2026" atau "2026-06-20" atau "20/06/2026"
   let hari = 0;
-  const m1 = tgl.match(/^(\d{1,2})[\/\-\s]/); // awalan angka
-  if(m1) hari = parseInt(m1[1]);
-  else{
-    const m2 = tgl.match(/\d{4}[\-\/](\d{2})[\-\/](\d{2})/); // YYYY-MM-DD
-    if(m2) hari = parseInt(m2[2]);
-    else{
-      const m3 = tgl.match(/(\d{1,2})\s+[A-Z]/i); // "20 JUN 2026"
-      if(m3) hari = parseInt(m3[1]);
+  // Format YYYY-MM-DD — cek dulu sebelum format lain
+  const mYMD = tgl.match(/^\d{4}[\-\/](\d{2})[\-\/](\d{2})/);
+  if(mYMD){ hari = parseInt(mYMD[2]); }
+  else {
+    // Format DD/MM/YYYY atau DD-MM-YYYY
+    const mDMY = tgl.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-]\d{4}/);
+    if(mDMY){ hari = parseInt(mDMY[1]); }
+    else {
+      // Format "22 JUN 2026"
+      const mDMon = tgl.match(/^(\d{1,2})\s+[A-Z]/i);
+      if(mDMon){ hari = parseInt(mDMon[1]); }
     }
   }
   if(hari === 0 || hari <= 20) return 0; // tidak kena denda
